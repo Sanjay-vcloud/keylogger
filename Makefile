@@ -1,34 +1,21 @@
 CC := gcc
-CFLAGS := -Wall -Wextra
+CFLAGS := -Wall -Wextra 
 
 SRCDIR := src
 OBJDIR := obj
 INCDIR := include
 
-OBJS := $(OBJDIR)/main.o $(OBJDIR)/logger.o $(OBJDIR)/daemon.o
+OBJS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 
-trace: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+trace : $(OBJS)
+	$(CC) $(CFLAGS) -o trace $(OBJS) -lcurl
 
-$(OBJDIR)/main.o : $(SRCDIR)/main.c 
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR)/logger.o : $(SRCDIR)/logger.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR)/daemon.o : $(SRCDIR)/daemon.c
+$(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 print:
-	@echo Source files: $(SRCDIR)/*.c
-	@echo "Object files: $(OBJS)"
-	@echo "Executable: trace"
-	@echo pwd: $(shell pwd)
-	@echo "Include directory: $(INCDIR)"
-	@echo "Object directory: $(OBJDIR)"
-	@echo "Source directory: $(SRCDIR)"
-	@echo "Compiler: $(CC)"
-	@echo "Compiler flags: $(CFLAGS)"
+	@echo $(OBJS)
 all: trace
 	@echo "Build complete. Run 'make run' to execute the program."
 

