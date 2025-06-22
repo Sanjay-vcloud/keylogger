@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include "../include/daemon.h"
 #include "../include/logger.h"
+#include "../include/config.h"
 
 extern pid_t sender_pid;
 

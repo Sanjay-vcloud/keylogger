@@ -8,6 +8,7 @@
 #include <time.h>
 #include "../include/logger.h"
 #include "../include/daemon.h"
+#include "../include/config.h"
 
 /**
  * Maps a key code to its corresponding string representation.

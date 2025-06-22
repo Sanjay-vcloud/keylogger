@@ -4,7 +4,7 @@
  *
  * This program reads appended data from a log file, buffers it, and sends it to a remote server
  * at regular intervals or when the buffer exceeds a maximum size. It handles log rotation
- * 
+ *
  */
 
 #include <stdio.h>
@@ -17,15 +17,12 @@
 #include <errno.h>
 #include <sys/syslog.h>
 #include "../include/logger.h"
+#include "../include/config.h"
 
 /** @brief Maximum in-memory buffer size (10MB) */
 #define MAX_BUF_CAPACITY (1024 * 1024 * 10)
-/** @brief Interval between sending data (in seconds) */
-#define SEND_INTERVAL_SECONDS (5*60)
 /** @brief Initial buffer size */
 #define INITIAL_BUF_CAPACITY 4096
-
-extern char *url;
 
 static CURL *curl_handle = NULL;
 static char *log_buffer = NULL;
@@ -79,7 +76,7 @@ int init_curl(void)
         syslog(LOG_ERR, "curl_easy_init() failed.");
         return 0;
     }
-    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(curl_handle, CURLOPT_URL, REMOTE_URL);
     curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
@@ -123,7 +120,7 @@ int send_log_data_to_remote(const char *data_to_send, size_t data_len)
     else
     {
         syslog(LOG_ERR, "curl_easy_perform() failed or server error. HTTP %ld. Response: %s\n",
-                http_code, response_chunk.memory);
+               http_code, response_chunk.memory);
     }
     free(response_chunk.memory);
     return success;
@@ -170,7 +167,13 @@ FILE *open_log_file(void)
 void run_uploader()
 {
 
-    syslog(LOG_INFO, "Starting uploader process... from uploader : %s",url);
+    if (REMOTE_URL == NULL || strlen(REMOTE_URL) == 0)
+    {
+        syslog(LOG_ERR, "REMOTE_URL is not set. Exiting.");
+        exit(EXIT_FAILURE);
+    }
+    
+    int readdata = 0;
     FILE *logfile = NULL;
     off_t offset_pos = 0;
     time_t last_send_time = time(NULL);
@@ -228,8 +231,12 @@ void run_uploader()
             offset_pos++;
         }
 
-        if (fstat(fileno(logfile), &st) == 0 && st.st_size < offset_pos)
-        {
+
+        if (!readdata)
+            usleep(500 * 1000); // Sleep for 500 milliseconds to avoid busy waiting
+        
+        
+        if (fstat(fileno(logfile), &st) == 0 && st.st_size < offset_pos){
             fclose(logfile);
             logfile = open_log_file();
             if (!logfile)
@@ -267,7 +274,6 @@ void run_uploader()
                 {
                     syslog(LOG_ERR, "Failed to send log data to remote server.");
                 }
-                usleep(500 * 1000);
             }
         }
     }

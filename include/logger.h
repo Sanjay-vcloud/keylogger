@@ -3,8 +3,6 @@
 #define KEY_TRACER
 #define MAX_SIZE 512
 
-#define LOG_PATH "/var/tmp/.syslog/.ktrace.log"
-#define TEMP_LOG_PATH "/var/tmp/.syslog/.ktrace.log.tmp"
 
 typedef struct
 {

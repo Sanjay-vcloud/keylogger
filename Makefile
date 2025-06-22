@@ -21,6 +21,11 @@ all: trace
 
 .PHONY: all clean print
 
+install:
+	@echo "Installing dependencies..."
+	sudo apt install libcurl4-openssl-dev
+	sudo apt install make
+	@echo "Dependencies installed."
 run: 
 	sudo ./trace
 clean:
